@@ -188,41 +188,54 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
             continue;
         }
         let is_open = expanded.contains(&i);
-        d2d.rect(x0 + 2.0, iy, x0 + row_w, iy + h, if is_open { 0x66_2a2a3a } else { 0x44_333333 });
+        // Clamp the plate to the list region (no scissor in draw2d).
+        d2d.rect(x0 + 2.0, iy.max(list_y0), x0 + row_w, (iy + h).min(list_y0 + list_h),
+                 if is_open { 0x66_2a2a3a } else { 0x44_333333 });
+
+        // Text goes through the MC pipeline and is drawn AFTER all rects
+        // (two-pass overlay rendering) — the header redraw can't cover it, so
+        // clip every text line to the list viewport manually.
+        let text_visible = |ty: f32| ty >= list_y0 - 1.0 && ty + 10.0 <= list_y0 + list_h;
 
         let name_x = x0 + 8.0;
         let name_y = iy + 4.0;
 
-        // ▸ / ▾ expansion marker + name + version
-        d2d.text(if is_open { "v" } else { ">" }, name_x, name_y, 0xFF_FFD700, false);
-        d2d.text(&e.name, name_x + 12.0, name_y, 0xFF_FFFFFF, true);
-        let ver_x = name_x + 12.0 + (e.name.chars().count() as f32 + 1.0) * CHAR_W;
-        d2d.text(&format!("v{}", e.version), ver_x, name_y, 0xAA_AAAAAA, false);
-
-        // Source badge
-        let badge = match e.source {
-            ModSource::Yog      => "[Yog]",
-            ModSource::Platform => "[MC]",
-        };
-        d2d.text(badge, x0 + row_w - 38.0, name_y, 0x88_44FF44, false);
+        if text_visible(name_y) {
+            // ▸ / ▾ expansion marker + name + version
+            d2d.text(if is_open { "v" } else { ">" }, name_x, name_y, 0xFF_FFD700, false);
+            d2d.text(&e.name, name_x + 12.0, name_y, 0xFF_FFFFFF, true);
+            let ver_x = name_x + 12.0 + (e.name.chars().count() as f32 + 1.0) * CHAR_W;
+            d2d.text(&format!("v{}", e.version), ver_x, name_y, 0xAA_AAAAAA, false);
+            let badge = match e.source {
+                ModSource::Yog      => "[Yog]",
+                ModSource::Platform => "[MC]",
+            };
+            d2d.text(badge, x0 + row_w - 38.0, name_y, 0x88_44FF44, false);
+        }
 
         // Authors
-        let by = if e.authors.is_empty() { "by unknown".to_string() }
-                 else { format!("by {}", e.authors) };
-        d2d.text(&truncate_chars(&by, desc_chars(row_w)), name_x, name_y + LINE_H, 0xCC_888888, false);
+        if text_visible(name_y + LINE_H) {
+            let by = if e.authors.is_empty() { "by unknown".to_string() }
+                     else { format!("by {}", e.authors) };
+            d2d.text(&truncate_chars(&by, desc_chars(row_w)), name_x, name_y + LINE_H, 0xCC_888888, false);
+        }
 
         // Description: one truncated line collapsed, full wrap expanded.
         let desc_y = name_y + LINE_H * 2.0;
         if is_open {
             let mut ly = desc_y;
             for line in wrap(&e.description, desc_chars(row_w)) {
-                d2d.text(&line, name_x, ly, 0xDD_CCCCCC, false);
+                if text_visible(ly) {
+                    d2d.text(&line, name_x, ly, 0xDD_CCCCCC, false);
+                }
                 ly += LINE_H;
             }
             // Footer: id, source detail
-            let src = match e.source { ModSource::Yog => "yog mod", ModSource::Platform => "platform mod" };
-            d2d.text(&format!("id: {}  ({})", e.id, src), name_x, ly + 2.0, 0x99_777799, false);
-        } else {
+            if text_visible(ly + 2.0) {
+                let src = match e.source { ModSource::Yog => "yog mod", ModSource::Platform => "platform mod" };
+                d2d.text(&format!("id: {}  ({})", e.id, src), name_x, ly + 2.0, 0x99_777799, false);
+            }
+        } else if text_visible(desc_y) {
             d2d.text(
                 &truncate_chars(&e.description, desc_chars(row_w)),
                 name_x, desc_y, 0x99_BBBBBB, false,
