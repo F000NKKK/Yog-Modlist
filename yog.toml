@@ -1,0 +1,16 @@
+[mod]
+id          = "yog-modlist"
+name        = "Yog Mod List"
+version     = "0.1.0"
+description = "In-game mod list browser. Shows loaded Yog mods and, on Fabric, platform mods."
+authors     = ["F000NK"]
+license     = "MIT OR Apache-2.0"
+
+# Point yog-api at the local loader repo during development.
+# Third-party builds omit this; yog-api comes from crates.io.
+[dependencies]
+serde      = "*"
+serde_json = "*"
+
+#[dev]
+#yog_api_path = "../Yog-Mod-Loader/rust/crates/yog-api"
