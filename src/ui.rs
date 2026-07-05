@@ -23,27 +23,27 @@ pub enum ModSource {
     Platform,
 }
 
-// ── Placeholder data (will be replaced by `registry.mods()` in a future ABI) ──
+// ── Real mod data via the loader (ABI minor 23) ──────────────────────────────
 
-pub fn gather_mod_entries() -> Vec<ModEntry> {
-    vec![
-        ModEntry {
-            id: "yog-modlist".into(),
-            name: "Yog Mod List".into(),
-            version: "0.1.0".into(),
-            authors: "F000NK".into(),
-            description: "In-game mod list browser for Yog.".into(),
-            source: ModSource::Yog,
-        },
-        ModEntry {
-            id: "hexmod-yog".into(),
-            name: "HexMod Yog".into(),
-            version: "0.1.0".into(),
-            authors: "F000NK, Yog Team".into(),
-            description: "HexCasting ported to Yog loader. Programmable magic through hex patterns.".into(),
-            source: ModSource::Yog,
-        },
-    ]
+/// Fetched once, on the first render — by then every mod has finished loading,
+/// so the list is complete (querying inside `register()` would miss mods that
+/// load after this one).
+static ENTRIES: std::sync::OnceLock<Vec<ModEntry>> = std::sync::OnceLock::new();
+
+pub fn mod_entries() -> &'static [ModEntry] {
+    ENTRIES.get_or_init(|| {
+        yog_api::installed_mods()
+            .into_iter()
+            .map(|m| ModEntry {
+                source: if m.source == "yog" { ModSource::Yog } else { ModSource::Platform },
+                id: m.id,
+                name: m.name,
+                version: m.version,
+                authors: m.authors,
+                description: m.description,
+            })
+            .collect()
+    })
 }
 
 // ── Static UI state ───────────────────────────────────────────────────────────
@@ -115,8 +115,8 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
         d2d.text(badge, x0 + w - 40.0, name_y, 0x88_44FF44, false);
 
         // Description (truncated to one line)
-        let desc = if e.description.len() > 56 {
-            format!("{}...", &e.description[..53])
+        let desc: String = if e.description.chars().count() > 56 {
+            format!("{}...", e.description.chars().take(53).collect::<String>())
         } else {
             e.description.clone()
         };
