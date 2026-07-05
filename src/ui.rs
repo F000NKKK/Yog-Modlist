@@ -54,6 +54,10 @@ static LAST_LAYOUT: Mutex<Option<yog_api::LayoutNode>> = Mutex::new(None);
 /// The screen dimensions from the last render frame.
 static LAST_SCREEN: Mutex<(f32, f32)> = Mutex::new((854.0, 480.0));
 
+/// Current scroll offset in GUI pixels (0 = top). Updated by wheel events,
+/// clamped in render where the content height is known.
+static SCROLL: Mutex<f32> = Mutex::new(0.0);
+
 // ── Rendering ────────────────────────────────────────────────────────────────
 
 pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
@@ -86,10 +90,25 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
     let list_h  = sh - list_y0 - pad;
     d2d.rect(x0, list_y0, x0 + w, list_y0 + list_h, 0x88_111111);
 
+    // Clamp the scroll offset now that the content height is known.
+    let content_h = entries.len() as f32 * (item_h + gap);
+    let max_scroll = (content_h - list_h).max(0.0);
+    let scroll = {
+        let mut s = SCROLL.lock().unwrap();
+        *s = s.clamp(0.0, max_scroll);
+        *s
+    };
+
     // Items
-    let mut item_y = list_y0 + 2.0;
+    let mut item_y = list_y0 + 2.0 - scroll;
     for e in entries {
         let iy = item_y;
+        // Cull rows fully outside the list region (no scissor in draw2d —
+        // partially visible top rows are covered by the header redraw below).
+        if iy + item_h < list_y0 || iy > list_y0 + list_h {
+            item_y += item_h + gap;
+            continue;
+        }
         // Background
         d2d.rect(x0 + 2.0, iy, x0 + w - 2.0, iy + item_h, 0x44_333333);
 
@@ -125,6 +144,23 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
         item_y += item_h + gap;
     }
 
+    // Header redraw — scrolled rows slide under it instead of over it.
+    d2d.rect(x0, y0, x0 + w, y0 + 28.0, 0xFF_222222);
+    d2d.text("Yog Mods", x0 + 8.0, y0 + 6.0, 0xFF_FFD700, true);
+    d2d.text(
+        &format!("{} mod(s)", entries.len()),
+        x0 + w - 80.0, y0 + 6.0, 0xAA_AAAAAA, false,
+    );
+
+    // Scrollbar
+    if max_scroll > 0.0 {
+        let track_x = x0 + w - 4.0;
+        d2d.rect(track_x, list_y0, x0 + w, list_y0 + list_h, 0x44_000000);
+        let knob_h = (list_h * (list_h / content_h)).max(16.0);
+        let knob_y = list_y0 + (list_h - knob_h) * (scroll / max_scroll);
+        d2d.rect(track_x, knob_y, x0 + w, knob_y + knob_h, 0xAA_888888);
+    }
+
     // Store a fake layout for future hit-testing support.
     *LAST_LAYOUT.lock().unwrap() = Some(yog_api::LayoutNode {
         rect: yog_api::Rect { x: x0, y: y0, w, h: sh - y0 },
@@ -135,6 +171,12 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
 // ── Event handling ───────────────────────────────────────────────────────────
 
 pub fn handle_ui_event(ui_id: &str, event: &str) {
+    // Wheel: one notch = one list row. Positive dy = wheel up = scroll up.
+    if let Some(dy) = event.strip_prefix("scroll:").and_then(|v| v.parse::<f32>().ok()) {
+        let mut s = SCROLL.lock().unwrap();
+        *s = (*s - dy * 68.0).max(0.0); // upper clamp happens in render
+        return;
+    }
     // Future: parse "click:X:Y" events and hit-test against stored layout.
     if event == "close" {
         yog_api::info!("[yog-modlist] UI closed: {}", ui_id);
