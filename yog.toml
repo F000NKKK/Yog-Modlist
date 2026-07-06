@@ -3,8 +3,8 @@ id          = "yog-modlist"
 name        = "Yog Mod List"
 version     = "0.1.0"
 description = "In-game mod list browser. Shows loaded Yog mods and, on Fabric, platform mods."
-authors     = ["F000NK"]
-license     = "MIT OR Apache-2.0"
+authors     = ["F000NK", "Yog Team"]
+license     = "AGPL-3.0-only"
 
 [dependencies]
 serde      = "*"
