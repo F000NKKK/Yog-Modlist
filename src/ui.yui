@@ -1,1 +1,5 @@
-<Screen id="yog-modlist:ui" width="280" height="170" anchor="center" padding="4" bg="#C0101010"/>
+<Screen id="yog-modlist:ui" width="280" height="170" anchor="center" padding="4" bg="#C0101010">
+  <Column x="73" y="44" w="126" h="75" gap="2" padding="2"/>
+  <Label x="6" y="6" text="Label" no_wrap="true"/>
+  <Button x="208" y="136" w="80" h="20" text="Button" bg="#FF555555" color="#FFFFFF"/>
+</Screen>
