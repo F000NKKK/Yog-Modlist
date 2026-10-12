@@ -477,9 +477,9 @@ checksum = "86bdeec523df10c1cb7bfb8ef0e2eb7e0d8bc0d9a3ecff247f573eebe2e3aa8b"
 
 [[package]]
 name = "yog-api"
-version = "0.87.0"
+version = "0.87.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdc28df1f7e28f73ff05ddff81571a94c6641e9957280e6346c362a243b12f80"
+checksum = "95ffa997bcc2500a5448a6fca9aa47dd6ed78120703ac22c741cbd352c9066fb"
 dependencies = [
  "ctor",
  "rkyv",
@@ -645,9 +645,9 @@ checksum = "d300b68e1172c9cec95fee547a1cf641cc7063562b5851b91017814d39beb045"
 
 [[package]]
 name = "yog-ui"
-version = "0.35.0"
+version = "0.35.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aec4c0303926f853696c163c7241921b34b23a84411ae374d547142269ec5799"
+checksum = "4346ebbc5a6194924787ab5d454df49338e44c15595c2b6d6b577c364fd22c19"
 dependencies = [
  "yog-abi",
  "yog-gfx",
