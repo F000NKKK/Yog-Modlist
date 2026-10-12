@@ -14,12 +14,12 @@ use yog_api::GfxContext;
 /// A single mod entry shown in the list.
 #[derive(Debug, Clone)]
 pub struct ModEntry {
-    pub id:          String,
-    pub name:        String,
-    pub version:     String,
-    pub authors:     String,
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub authors: String,
     pub description: String,
-    pub source:      ModSource,
+    pub source: ModSource,
 }
 
 #[derive(Debug, Clone)]
@@ -40,7 +40,11 @@ pub fn mod_entries() -> &'static [ModEntry] {
         yog_api::installed_mods()
             .into_iter()
             .map(|m| ModEntry {
-                source: if m.source == "yog" { ModSource::Yog } else { ModSource::Platform },
+                source: if m.source == "yog" {
+                    ModSource::Yog
+                } else {
+                    ModSource::Platform
+                },
                 id: m.id,
                 name: m.name,
                 version: m.version,
@@ -65,7 +69,10 @@ static ROWS: Mutex<Vec<(usize, f32, f32)>> = Mutex::new(Vec::new());
 
 /// Scrollbar geometry from the last frame:
 /// (track_x0, track_y0, track_x1, track_y1, knob_y0, knob_y1).
-static SCROLLBAR: Mutex<Option<(f32, f32, f32, f32, f32, f32)>> = Mutex::new(None);
+static SCROLLBAR: Mutex<Option<Rect6>> = Mutex::new(None);
+
+/// Six `f32` geometry values; see [`SCROLLBAR`].
+type Rect6 = (f32, f32, f32, f32, f32, f32);
 
 /// List metrics from the last frame: (list_y0, list_h, max_scroll, knob_h).
 static METRICS: Mutex<(f32, f32, f32, f32)> = Mutex::new((0.0, 0.0, 0.0, 16.0));
@@ -84,12 +91,17 @@ fn wrap(text: &str, max_chars: usize) -> Vec<String> {
     let mut lines = Vec::new();
     let mut line = String::new();
     for word in text.split_whitespace() {
-        let need = if line.is_empty() { word.chars().count() }
-                   else { line.chars().count() + 1 + word.chars().count() };
+        let need = if line.is_empty() {
+            word.chars().count()
+        } else {
+            line.chars().count() + 1 + word.chars().count()
+        };
         if need > max_chars && !line.is_empty() {
             lines.push(std::mem::take(&mut line));
         }
-        if !line.is_empty() { line.push(' '); }
+        if !line.is_empty() {
+            line.push(' ');
+        }
         // A single word longer than the line gets hard-split.
         if word.chars().count() > max_chars {
             let mut w = word;
@@ -103,14 +115,23 @@ fn wrap(text: &str, max_chars: usize) -> Vec<String> {
             line.push_str(word);
         }
     }
-    if !line.is_empty() { lines.push(line); }
-    if lines.is_empty() { lines.push(String::new()); }
+    if !line.is_empty() {
+        lines.push(line);
+    }
+    if lines.is_empty() {
+        lines.push(String::new());
+    }
     lines
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
     if text.chars().count() > max_chars {
-        format!("{}...", text.chars().take(max_chars.saturating_sub(3)).collect::<String>())
+        format!(
+            "{}...",
+            text.chars()
+                .take(max_chars.saturating_sub(3))
+                .collect::<String>()
+        )
     } else {
         text.to_string()
     }
@@ -120,7 +141,7 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 
 const PAD: f32 = 12.0;
 const HEADER_H: f32 = 28.0;
-const ROW_H: f32 = 46.0;      // collapsed: name+version / authors / one desc line
+const ROW_H: f32 = 46.0; // collapsed: name+version / authors / one desc line
 const ROW_GAP: f32 = 4.0;
 
 /// Width available for description text inside a row.
@@ -148,11 +169,11 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
 
     let x0 = PAD;
     let y0 = PAD;
-    let w  = sw - PAD * 2.0;
+    let w = sw - PAD * 2.0;
     let row_w = w - 10.0; // leave room for the scrollbar
 
     let list_y0 = y0 + HEADER_H + 2.0;
-    let list_h  = sh - list_y0 - PAD;
+    let list_h = sh - list_y0 - PAD;
 
     let expanded = {
         let guard = EXPANDED.lock().unwrap();
@@ -160,7 +181,9 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
     };
 
     // Content height with per-row (expansion-dependent) heights.
-    let heights: Vec<f32> = entries.iter().enumerate()
+    let heights: Vec<f32> = entries
+        .iter()
+        .enumerate()
         .map(|(i, e)| row_height(e, expanded.contains(&i), row_w))
         .collect();
     let content_h: f32 = heights.iter().map(|h| h + ROW_GAP).sum();
@@ -189,8 +212,13 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
         }
         let is_open = expanded.contains(&i);
         // Clamp the plate to the list region (no scissor in draw2d).
-        d2d.rect(x0 + 2.0, iy.max(list_y0), x0 + row_w, (iy + h).min(list_y0 + list_h),
-                 if is_open { 0x66_2a2a3a } else { 0x44_333333 });
+        d2d.rect(
+            x0 + 2.0,
+            iy.max(list_y0),
+            x0 + row_w,
+            (iy + h).min(list_y0 + list_h),
+            if is_open { 0x66_2a2a3a } else { 0x44_333333 },
+        );
 
         // Text goes through the MC pipeline and is drawn AFTER all rects
         // (two-pass overlay rendering) — the header redraw can't cover it, so
@@ -202,12 +230,24 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
 
         if text_visible(name_y) {
             // ▸ / ▾ expansion marker + name + version
-            d2d.text(if is_open { "v" } else { ">" }, name_x, name_y, 0xFF_FFD700, false);
+            d2d.text(
+                if is_open { "v" } else { ">" },
+                name_x,
+                name_y,
+                0xFF_FFD700,
+                false,
+            );
             d2d.text(&e.name, name_x + 12.0, name_y, 0xFF_FFFFFF, true);
             let ver_x = name_x + 12.0 + (e.name.chars().count() as f32 + 1.0) * CHAR_W;
-            d2d.text(&format!("v{}", e.version), ver_x, name_y, 0xAA_AAAAAA, false);
+            d2d.text(
+                &format!("v{}", e.version),
+                ver_x,
+                name_y,
+                0xAA_AAAAAA,
+                false,
+            );
             let badge = match e.source {
-                ModSource::Yog      => "[Yog]",
+                ModSource::Yog => "[Yog]",
                 ModSource::Platform => "[MC]",
             };
             d2d.text(badge, x0 + row_w - 38.0, name_y, 0x88_44FF44, false);
@@ -215,9 +255,18 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
 
         // Authors
         if text_visible(name_y + LINE_H) {
-            let by = if e.authors.is_empty() { "by unknown".to_string() }
-                     else { format!("by {}", e.authors) };
-            d2d.text(&truncate_chars(&by, desc_chars(row_w)), name_x, name_y + LINE_H, 0xCC_888888, false);
+            let by = if e.authors.is_empty() {
+                "by unknown".to_string()
+            } else {
+                format!("by {}", e.authors)
+            };
+            d2d.text(
+                &truncate_chars(&by, desc_chars(row_w)),
+                name_x,
+                name_y + LINE_H,
+                0xCC_888888,
+                false,
+            );
         }
 
         // Description: one truncated line collapsed, full wrap expanded.
@@ -232,13 +281,25 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
             }
             // Footer: id, source detail
             if text_visible(ly + 2.0) {
-                let src = match e.source { ModSource::Yog => "yog mod", ModSource::Platform => "platform mod" };
-                d2d.text(&format!("id: {}  ({})", e.id, src), name_x, ly + 2.0, 0x99_777799, false);
+                let src = match e.source {
+                    ModSource::Yog => "yog mod",
+                    ModSource::Platform => "platform mod",
+                };
+                d2d.text(
+                    &format!("id: {}  ({})", e.id, src),
+                    name_x,
+                    ly + 2.0,
+                    0x99_777799,
+                    false,
+                );
             }
         } else if text_visible(desc_y) {
             d2d.text(
                 &truncate_chars(&e.description, desc_chars(row_w)),
-                name_x, desc_y, 0x99_BBBBBB, false,
+                name_x,
+                desc_y,
+                0x99_BBBBBB,
+                false,
             );
         }
     }
@@ -249,7 +310,10 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
     d2d.text("Yog Mods", x0 + 8.0, y0 + 6.0, 0xFF_FFD700, true);
     d2d.text(
         &format!("{} mod(s)", entries.len()),
-        x0 + w - 80.0, y0 + 6.0, 0xAA_AAAAAA, false,
+        x0 + w - 80.0,
+        y0 + 6.0,
+        0xAA_AAAAAA,
+        false,
     );
 
     // Scrollbar (draggable)
@@ -260,10 +324,21 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
         let knob_h = (list_h * (list_h / content_h)).max(16.0);
         let knob_y = list_y0 + (list_h - knob_h) * (scroll / max_scroll);
         let dragging = DRAGGING.lock().unwrap().is_some();
-        d2d.rect(track_x0, knob_y, track_x1, knob_y + knob_h,
-                 if dragging { 0xFF_BBBBBB } else { 0xAA_888888 });
-        *SCROLLBAR.lock().unwrap() =
-            Some((track_x0, list_y0, track_x1, list_y0 + list_h, knob_y, knob_y + knob_h));
+        d2d.rect(
+            track_x0,
+            knob_y,
+            track_x1,
+            knob_y + knob_h,
+            if dragging { 0xFF_BBBBBB } else { 0xAA_888888 },
+        );
+        *SCROLLBAR.lock().unwrap() = Some((
+            track_x0,
+            list_y0,
+            track_x1,
+            list_y0 + list_h,
+            knob_y,
+            knob_y + knob_h,
+        ));
         *METRICS.lock().unwrap() = (list_y0, list_h, max_scroll, knob_h);
     } else {
         *SCROLLBAR.lock().unwrap() = None;
@@ -276,7 +351,9 @@ pub fn render_mod_list(gfx: &GfxContext, entries: &[ModEntry]) {
 /// Map a cursor y on the track to a scroll offset while dragging.
 fn drag_to_scroll(my: f32, grab: f32) {
     let (list_y0, list_h, max_scroll, knob_h) = *METRICS.lock().unwrap();
-    if max_scroll <= 0.0 { return; }
+    if max_scroll <= 0.0 {
+        return;
+    }
     let denom = (list_h - knob_h).max(1.0);
     let t = ((my - grab - list_y0) / denom).clamp(0.0, 1.0);
     *SCROLL.lock().unwrap() = t * max_scroll;
@@ -284,7 +361,10 @@ fn drag_to_scroll(my: f32, grab: f32) {
 
 pub fn handle_ui_event(ui_id: &str, event: &str) {
     // Wheel: roughly one collapsed row per notch. Positive dy = wheel up.
-    if let Some(dy) = event.strip_prefix("scroll:").and_then(|v| v.parse::<f32>().ok()) {
+    if let Some(dy) = event
+        .strip_prefix("scroll:")
+        .and_then(|v| v.parse::<f32>().ok())
+    {
         let mut s = SCROLL.lock().unwrap();
         *s = (*s - dy * (ROW_H + ROW_GAP)).max(0.0); // upper clamp happens in render
         return;
@@ -295,7 +375,7 @@ pub fn handle_ui_event(ui_id: &str, event: &str) {
         Some((it.next()?.parse().ok()?, it.next()?.parse().ok()?))
     };
 
-    if let Some((mx, my)) = event.strip_prefix("click:").and_then(|r| parse_xy(r)) {
+    if let Some((mx, my)) = event.strip_prefix("click:").and_then(parse_xy) {
         // Scrollbar first: grab the knob, or jump-scroll on the track.
         if let Some((tx0, ty0, tx1, ty1, ky0, ky1)) = *SCROLLBAR.lock().unwrap() {
             if mx >= tx0 && mx <= tx1 && my >= ty0 && my <= ty1 {
@@ -323,7 +403,7 @@ pub fn handle_ui_event(ui_id: &str, event: &str) {
         return;
     }
 
-    if let Some((_, my)) = event.strip_prefix("drag:").and_then(|r| parse_xy(r)) {
+    if let Some((_, my)) = event.strip_prefix("drag:").and_then(parse_xy) {
         let grab = *DRAGGING.lock().unwrap();
         if let Some(grab) = grab {
             drag_to_scroll(my, grab);
