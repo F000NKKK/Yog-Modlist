@@ -22,7 +22,5 @@
   "details.authors_unknown": "by unknown",
   "details.id": "id: {id}",
   "details.no_description": "No description.",
-  "details.none_selected": "No mod selected",
-  "component.pill": { "value": "A small framed tag with a short label.", "comment": "Designer toolbox tooltip of the Pill component" },
-  "component.stat_bar": { "value": "A labelled progress bar.", "comment": "Designer toolbox tooltip of the StatBar component" }
+  "details.none_selected": "No mod selected"
 }

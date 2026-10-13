@@ -22,7 +22,5 @@
   "details.authors_unknown": "Автор неизвестен",
   "details.id": "id: {id}",
   "details.no_description": "Нет описания.",
-  "details.none_selected": "Мод не выбран",
-  "component.pill": "Небольшая метка в рамке с коротким текстом.",
-  "component.stat_bar": "Индикатор выполнения с подписью."
+  "details.none_selected": "Мод не выбран"
 }

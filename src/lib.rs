@@ -6,10 +6,6 @@
 //! `mod_list.rs`.
 
 mod mod_list;
-mod stat_bar;
-
-// `.yui` components without a code-behind (`pill.yui`).
-yog_api::ui_components!();
 
 // `crate::res` — typed accessors for resources/*.yres (Strings::...).
 yog_api::resources!();
