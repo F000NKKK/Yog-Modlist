@@ -46,7 +46,11 @@ impl ModSource {
 
 impl ModEntry {
     pub fn subtitle(&self) -> String {
-        format!("{}  {}", Strings::row_version(&self.version), self.source.badge())
+        format!(
+            "{}  {}",
+            Strings::row_version(&self.version),
+            self.source.badge()
+        )
     }
     pub fn authors_text(&self) -> String {
         if self.authors.is_empty() {
@@ -113,7 +117,9 @@ impl ModListVm {
     /// The mods `filter` shows with the current search.
     fn shown(&self, filter: Filter) -> impl Iterator<Item = &ModEntry> + '_ {
         let query = self.search.trim().to_lowercase();
-        self.mods.iter().filter(move |m| filter.allows(m) && m.matches(&query))
+        self.mods
+            .iter()
+            .filter(move |m| filter.allows(m) && m.matches(&query))
     }
     pub fn visible(&self) -> impl Iterator<Item = &ModEntry> + '_ {
         self.shown(self.filter)
@@ -164,7 +170,11 @@ fn load_mods() -> Vec<ModEntry> {
     let mut mods: Vec<ModEntry> = yog_api::installed_mods()
         .into_iter()
         .map(|m| ModEntry {
-            source: if m.source == "yog" { ModSource::Yog } else { ModSource::Platform },
+            source: if m.source == "yog" {
+                ModSource::Yog
+            } else {
+                ModSource::Platform
+            },
             id: m.id,
             name: m.name,
             version: m.version,
@@ -198,7 +208,10 @@ mod tests {
             entry("beta", ModSource::Yog),
             entry("fabric-api", ModSource::Platform),
         ];
-        let mut h = TestHost::<View>::new(ModListVm { mods, ..Default::default() });
+        let mut h = TestHost::<View>::new(ModListVm {
+            mods,
+            ..Default::default()
+        });
         h.size(427.0, 240.0).open();
         h
     }
@@ -209,7 +222,9 @@ mod tests {
         assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("ALPHA"));
         h.click_id(ids::FILTER_PLATFORM);
         assert_eq!(h.vm().filter, Filter::Platform);
-        assert!(h.state(ids::FILTER_PLATFORM).contains(yog_api::ui::StateFlags::CHECKED));
+        assert!(h
+            .state(ids::FILTER_PLATFORM)
+            .contains(yog_api::ui::StateFlags::CHECKED));
         assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("FABRIC-API"));
 
         h.click_id(ids::FILTER_ALL);
