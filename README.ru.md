@@ -50,6 +50,7 @@ Java-модов платформы.
 | [`src/mod_list.rs`](src/mod_list.rs) | `ModListVm`, модель представления: при открытии загружает `installed_mods()`, фильтрует, ищет, хранит выбор; там же тест на `TestHost` без игры |
 | [`src/pill.yui`](src/pill.yui), [`src/stat_bar.yui`](src/stat_bar.yui) + [`.rs`](src/stat_bar.rs) | Два переиспользуемых компонента: только разметка и разметка с кодом |
 | [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Тексты на английском и русском; название и описание мода в `yog.toml` тоже берутся отсюда (`@Strings.mod_name`) |
+| [`resources/Colors.yres`](resources/Colors.yres) | Цвета источника в панели подробностей (`Colors::SOURCE_YOG`, `Colors::SOURCE_PLATFORM`) |
 
 Привязки в разметке напрямую вызывают модель представления:
 

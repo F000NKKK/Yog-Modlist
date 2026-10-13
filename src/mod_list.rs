@@ -4,7 +4,7 @@
 
 yog_api::ui_include!("mod_list");
 
-use crate::res::Strings;
+use crate::res::{Colors, Strings};
 use yog_kit::prelude::*;
 
 #[derive(Debug, Clone)]
@@ -32,8 +32,8 @@ impl ModSource {
     }
     pub fn color(self) -> u32 {
         match self {
-            Self::Yog => 0xFF_88FF88,
-            Self::Platform => 0xFF_88BBFF,
+            Self::Yog => Colors::SOURCE_YOG,
+            Self::Platform => Colors::SOURCE_PLATFORM,
         }
     }
     fn badge(self) -> String {
@@ -110,16 +110,17 @@ impl ViewModel for ModListVm {
 }
 
 impl ModListVm {
-    pub fn visible(&self) -> impl Iterator<Item = &ModEntry> + '_ {
+    /// The mods `filter` shows with the current search.
+    fn shown(&self, filter: Filter) -> impl Iterator<Item = &ModEntry> + '_ {
         let query = self.search.trim().to_lowercase();
-        self.mods
-            .iter()
-            .filter(move |m| self.filter.allows(m) && m.matches(&query))
+        self.mods.iter().filter(move |m| filter.allows(m) && m.matches(&query))
+    }
+    pub fn visible(&self) -> impl Iterator<Item = &ModEntry> + '_ {
+        self.shown(self.filter)
     }
     /// The filter would show something (with the current search).
     pub fn has(&self, f: Filter) -> bool {
-        let query = self.search.trim().to_lowercase();
-        self.mods.iter().any(|m| f.allows(m) && m.matches(&query))
+        self.shown(f).next().is_some()
     }
     pub fn count_text(&self) -> String {
         let (shown, total) = (self.visible().count(), self.mods.len());
