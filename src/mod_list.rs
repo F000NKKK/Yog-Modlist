@@ -1,23 +1,12 @@
-//! Code-behind of the mod browser screen (`mod_list.yui`).
-//!
-//! The markup holds the static layout — header, search box, filter buttons,
-//! the list and details panes, the Done button; `yog build` generates
-//! `build()`/`render_with()`/`click()`/`ids`/`events` from it into
-//! `.yog-build/generated/mod_list.g.rs`, pulled in by `ui_include!` below.
-//! This file has the logic: the data, the state, the list rows (added at
-//! runtime, like WinForms code adding controls to a panel) and the event
-//! handlers.
+//! View model of the mod browser (`mod_list.yui`). Layout, bindings,
+//! scrolling, selection and keyboard handling come from the markup and
+//! yog-kit; this file is the data and the logic.
 
 yog_api::ui_include!("mod_list");
 
-use std::sync::{Mutex, MutexGuard, OnceLock};
-
 use crate::res::Strings;
-use yog_api::ui::{widget, FlexDir, ScrollState, TextBoxEvent, TextBoxState, Units, Widget};
+use yog_kit::prelude::*;
 
-// ── Data ─────────────────────────────────────────────────────────────────────
-
-/// One mod shown in the list.
 #[derive(Debug, Clone)]
 pub struct ModEntry {
     pub id: String,
@@ -34,44 +23,65 @@ pub enum ModSource {
     Platform,
 }
 
-/// Every installed mod, Yog mods first, then by name. Fetched on the first
-/// render — by then every mod has finished loading (querying inside
-/// `register()` would miss mods that load after this one).
-fn mod_entries() -> &'static [ModEntry] {
-    static ENTRIES: OnceLock<Vec<ModEntry>> = OnceLock::new();
-    ENTRIES.get_or_init(|| {
-        let mut entries: Vec<ModEntry> = yog_api::installed_mods()
-            .into_iter()
-            .map(|m| ModEntry {
-                source: if m.source == "yog" {
-                    ModSource::Yog
-                } else {
-                    ModSource::Platform
-                },
-                id: m.id,
-                name: m.name,
-                version: m.version,
-                authors: m.authors,
-                description: m.description,
-            })
-            .collect();
-        entries.sort_by_key(|e| (e.source != ModSource::Yog, e.name.to_lowercase()));
-        entries
-    })
+impl ModSource {
+    pub fn label(self) -> String {
+        match self {
+            Self::Yog => Strings::source_yog(),
+            Self::Platform => Strings::source_platform(),
+        }
+    }
+    pub fn color(self) -> u32 {
+        match self {
+            Self::Yog => 0xFF_88FF88,
+            Self::Platform => 0xFF_88BBFF,
+        }
+    }
+    fn badge(self) -> String {
+        match self {
+            Self::Yog => Strings::badge_yog(),
+            Self::Platform => Strings::badge_platform(),
+        }
+    }
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
+impl ModEntry {
+    pub fn subtitle(&self) -> String {
+        format!("{}  {}", Strings::row_version(&self.version), self.source.badge())
+    }
+    pub fn authors_text(&self) -> String {
+        if self.authors.is_empty() {
+            Strings::details_authors_unknown()
+        } else {
+            Strings::details_authors(&self.authors)
+        }
+    }
+    pub fn description_text(&self) -> String {
+        if self.description.is_empty() {
+            Strings::details_no_description()
+        } else {
+            self.description.clone()
+        }
+    }
+    /// Name, id or description contains `query` (already lowercase).
+    fn matches(&self, query: &str) -> bool {
+        query.is_empty()
+            || [&self.name, &self.id, &self.description]
+                .iter()
+                .any(|s| s.to_lowercase().contains(query))
+    }
+}
 
 /// Which mods the list shows.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Filter {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum Filter {
+    #[default]
     All,
     Yog,
     Platform,
 }
 
 impl Filter {
-    fn matches(self, e: &ModEntry) -> bool {
+    fn allows(self, e: &ModEntry) -> bool {
         match self {
             Filter::All => true,
             Filter::Yog => e.source == ModSource::Yog,
@@ -80,298 +90,87 @@ impl Filter {
     }
 }
 
-/// Whether `e` matches the search text (name, id or description; any case).
-fn matches_search(e: &ModEntry, query: &str) -> bool {
-    let query = query.trim().to_lowercase();
-    query.is_empty()
-        || [&e.name, &e.id, &e.description]
-            .iter()
-            .any(|field| field.to_lowercase().contains(&query))
-}
-
-struct State {
+#[derive(Default)]
+pub struct ModListVm {
+    mods: Vec<ModEntry>,
     filter: Filter,
-    search: TextBoxState,
-    /// Id of the selected mod; `None` = the first one shown.
+    search: String,
+    /// Chosen mod; `None` = the first one shown.
     selected: Option<String>,
-    list: ScrollState,
-    details: ScrollState,
 }
 
-static STATE: Mutex<State> = Mutex::new(State {
-    filter: Filter::All,
-    search: TextBoxState::new(),
-    selected: None,
-    list: ScrollState::new(),
-    details: ScrollState::new(),
-});
-
-fn state() -> MutexGuard<'static, State> {
-    STATE.lock().unwrap_or_else(|e| e.into_inner())
-}
-
-/// The mods passing `filter` and the search text `query`, with their index
-/// in [`mod_entries`].
-fn visible_with(filter: Filter, query: &str) -> impl Iterator<Item = (usize, &'static ModEntry)> + '_ {
-    mod_entries()
-        .iter()
-        .enumerate()
-        .filter(move |(_, e)| filter.matches(e) && matches_search(e, query))
-}
-
-/// The mods the list shows.
-fn visible(st: &State) -> impl Iterator<Item = (usize, &'static ModEntry)> + '_ {
-    visible_with(st.filter, st.search.text())
-}
-
-/// The selected mod, or the first one shown.
-fn selection(st: &State) -> Option<(usize, &'static ModEntry)> {
-    match &st.selected {
-        Some(id) => visible(st).find(|(_, e)| &e.id == id),
-        None => visible(st).next(),
-    }
-}
-
-// ── Rendering ────────────────────────────────────────────────────────────────
-
-/// Event raised by a list row: `select:<index into mod_entries()>`.
-const SELECT: &str = "select:";
-/// Wheel scroll per notch: about one row.
-const WHEEL_STEP: f32 = 26.0;
-
-const ROW_BG: u32 = 0x44_333333;
-const ROW_SELECTED_BG: u32 = 0x88_3A3A5A;
-const FILTER_BG: u32 = 0xFF_333333;
-const FILTER_ACTIVE_BG: u32 = 0xFF_555555;
-
-fn source_label(source: ModSource) -> String {
-    match source {
-        ModSource::Yog => Strings::source_yog(),
-        ModSource::Platform => Strings::source_platform(),
-    }
-}
-
-/// One list row: name, then version and source.
-fn row(index: usize, e: &ModEntry, selected: bool) -> Widget {
-    let badge = match e.source {
-        ModSource::Yog => Strings::badge_yog(),
-        ModSource::Platform => Strings::badge_platform(),
-    };
-    widget::panel(FlexDir::Column)
-        .w(Units::Percent(100.0))
-        .padding(3.0, 4.0, 3.0, 4.0)
-        .gap(1.0)
-        .bg(if selected { ROW_SELECTED_BG } else { ROW_BG })
-        .on_click(format!("{SELECT}{index}"))
-        .child(
-            widget::label(&e.name)
-                .w(Units::Percent(100.0))
-                .color(if selected { 0xFF_FFD700 } else { 0xFF_FFFFFF })
-                .ellipsis(),
-        )
-        .child(
-            widget::label(format!("{}  {badge}", Strings::row_version(&e.version)))
-                .w(Units::Percent(100.0))
-                .color(0xAA_AAAAAA)
-                .shadow(false)
-                .ellipsis(),
-        )
-}
-
-/// Sets a label's text (and color, if given).
-fn set(root: &mut Widget, id: &str, text: &str, color: Option<u32>) {
-    if let Some(w) = root.find_mut(id) {
-        w.set_text(text);
-        if let Some(c) = color {
-            w.style.color = c;
+impl ViewModel for ModListVm {
+    /// Every mod has loaded by the time the screen first opens (querying in
+    /// `register()` would miss mods that load after this one).
+    fn on_open(&mut self, _cx: &mut Cx<'_, Self>) {
+        if self.mods.is_empty() {
+            self.mods = load_mods();
         }
     }
 }
 
-/// Fills the designed tree in with the current state.
-fn populate(root: &mut Widget) {
-    let mut st = state();
-    if let Some(search) = root.find_mut(ids::SEARCH) {
-        st.search.apply(search);
+impl ModListVm {
+    pub fn visible(&self) -> impl Iterator<Item = &ModEntry> + '_ {
+        let query = self.search.trim().to_lowercase();
+        self.mods
+            .iter()
+            .filter(move |m| self.filter.allows(m) && m.matches(&query))
     }
-    let total = mod_entries().len();
-    let shown = visible(&st).count();
-    let count = if shown == total {
-        Strings::screen_count(total)
-    } else {
-        Strings::screen_count_filtered(shown, total)
-    };
-    set(root, ids::MOD_COUNT, &count, None);
-
-    for (id, filter) in [
-        (ids::FILTER_ALL, Filter::All),
-        (ids::FILTER_YOG, Filter::Yog),
-        (ids::FILTER_PLATFORM, Filter::Platform),
-    ] {
-        if let Some(b) = root.find_mut(id) {
-            let any = visible_with(filter, st.search.text()).next().is_some();
-            b.style.bg = if st.filter == filter {
-                FILTER_ACTIVE_BG
-            } else {
-                FILTER_BG
-            };
-            b.style.color = if any { 0xFF_FFFFFF } else { 0xFF_777777 };
-            b.enabled = any;
+    /// The filter would show something (with the current search).
+    pub fn has(&self, f: Filter) -> bool {
+        let query = self.search.trim().to_lowercase();
+        self.mods.iter().any(|m| f.allows(m) && m.matches(&query))
+    }
+    pub fn count_text(&self) -> String {
+        let (shown, total) = (self.visible().count(), self.mods.len());
+        if shown == total {
+            Strings::screen_count(total)
+        } else {
+            Strings::screen_count_filtered(shown, total)
         }
     }
-
-    let current = selection(&st);
-    if let Some(list) = root.find_mut(ids::MOD_LIST) {
-        list.style.scroll_y = st.list.offset;
-        let selected = current.map(|(i, _)| i);
-        list.children = visible(&st)
-            .map(|(i, e)| row(i, e, Some(i) == selected))
-            .collect();
-        if list.children.is_empty() {
-            let empty = if st.search.text().trim().is_empty() {
-                Strings::list_empty()
-            } else {
-                Strings::list_no_matches()
-            };
-            list.children
-                .push(widget::label(empty).color(0xFF_888888).shadow(false));
+    pub fn empty_text(&self) -> String {
+        if self.search.trim().is_empty() {
+            Strings::list_empty()
+        } else {
+            Strings::list_no_matches()
         }
     }
-
-    if let Some(details) = root.find_mut(ids::DETAILS) {
-        details.style.scroll_y = st.details.offset;
-    }
-    match current {
-        Some((_, e)) => {
-            set(root, ids::DETAIL_NAME, &e.name, None);
-            set(
-                root,
-                ids::DETAIL_VERSION,
-                &Strings::details_version(&e.version),
-                None,
-            );
-            let source_color = match e.source {
-                ModSource::Yog => 0xFF_88FF88,
-                ModSource::Platform => 0xFF_88BBFF,
-            };
-            set(
-                root,
-                ids::DETAIL_SOURCE,
-                &source_label(e.source),
-                Some(source_color),
-            );
-            let by = if e.authors.is_empty() {
-                Strings::details_authors_unknown()
-            } else {
-                Strings::details_authors(&e.authors)
-            };
-            set(root, ids::DETAIL_AUTHORS, &by, None);
-            set(root, ids::DETAIL_ID, &Strings::details_id(&e.id), None);
-            let desc = if e.description.is_empty() {
-                Strings::details_no_description()
-            } else {
-                e.description.clone()
-            };
-            set(root, ids::DETAIL_DESCRIPTION, &desc, None);
-        }
-        None => {
-            set(root, ids::DETAIL_NAME, &Strings::details_none_selected(), None);
-            for id in [
-                ids::DETAIL_VERSION,
-                ids::DETAIL_SOURCE,
-                ids::DETAIL_AUTHORS,
-                ids::DETAIL_ID,
-                ids::DETAIL_DESCRIPTION,
-            ] {
-                set(root, id, "", None);
-            }
+    pub fn selected(&self) -> Option<&ModEntry> {
+        match &self.selected {
+            Some(id) => self.visible().find(|m| &m.id == id),
+            None => self.visible().next(),
         }
     }
-}
+    pub fn selected_id(&self) -> Option<&str> {
+        self.selected().map(|m| m.id.as_str())
+    }
+    /// The list scrolls back to the top when this changes.
+    pub fn list_scope(&self) -> (Filter, &str) {
+        (self.filter, self.search.as_str())
+    }
 
-// ── Events ───────────────────────────────────────────────────────────────────
-
-/// Wheel and scrollbar events for the two scroll views, against the layout
-/// the user saw. The wheel scrolls the list (it carries no cursor position).
-fn scroll_event(event: &str) -> bool {
-    with_last(|ui| {
-        let mut st = state();
-        let st = &mut *st;
-        let list = ui.find_node(ids::MOD_LIST);
-        let details = ui.find_node(ids::DETAILS);
-        list.is_some_and(|n| st.list.handle(event, n, WHEEL_STEP))
-            || (!event.starts_with("scroll:")
-                && details.is_some_and(|n| st.details.handle(event, n, WHEEL_STEP)))
-    })
-    .unwrap_or(false)
-}
-
-/// After the filter or the search text changed: back to the list's top,
-/// keeping the selection if it's still shown.
-fn list_changed(st: &mut State) {
-    st.list.reset();
-    if selection(st).is_none() {
-        st.selected = None;
-        st.details.reset();
+    pub fn select(&mut self, id: String) {
+        self.selected = Some(id);
+    }
+    pub fn set_filter(&mut self, filter: Filter) {
+        self.filter = filter;
     }
 }
 
-fn set_filter(filter: Filter) {
-    let mut st = state();
-    if st.filter != filter {
-        st.filter = filter;
-        list_changed(&mut st);
-    }
-}
-
-/// The search box's share of an event; `true` when it used it (typing,
-/// caret keys, Esc unfocusing the box, ...), which keeps the key from the
-/// game — Esc then doesn't close the screen.
-fn search_event(event: &str) -> bool {
-    let mut st = state();
-    let st = &mut *st;
-    let result = text_box(ids::SEARCH, &mut st.search, event);
-    if result == TextBoxEvent::Changed {
-        list_changed(st);
-    }
-    result.consumed()
-}
-
-fn select(index: usize) {
-    let Some(e) = mod_entries().get(index) else {
-        return;
-    };
-    let mut st = state();
-    if st.selected.as_deref() != Some(e.id.as_str()) {
-        st.selected = Some(e.id.clone());
-        st.details.reset();
-    }
-}
-
-/// Handles one UI event; `true` = used (see [`search_event`]).
-fn on_event(event: &str) -> bool {
-    if search_event(event) || scroll_event(event) {
-        return true;
-    }
-    let Some(clicked) = click(event) else {
-        return false;
-    };
-    match clicked.as_str() {
-        events::DONE => close(),
-        events::FILTER_ALL => set_filter(Filter::All),
-        events::FILTER_YOG => set_filter(Filter::Yog),
-        events::FILTER_PLATFORM => set_filter(Filter::Platform),
-        other => {
-            if let Some(i) = other.strip_prefix(SELECT).and_then(|i| i.parse().ok()) {
-                select(i);
-            }
-        }
-    }
-    true
-}
-
-/// Registers the screen; open it with [`open`] or a menu entry on [`ID`].
-pub fn register(registry: &mut yog_api::Registry) {
-    registry.on_ui_render(ID, |gfx| render_with(gfx, populate));
-    registry.register_ui(ID, |_ui_id, event| on_event(event));
+/// Every installed mod, Yog mods first, then by name.
+fn load_mods() -> Vec<ModEntry> {
+    let mut mods: Vec<ModEntry> = yog_api::installed_mods()
+        .into_iter()
+        .map(|m| ModEntry {
+            source: if m.source == "yog" { ModSource::Yog } else { ModSource::Platform },
+            id: m.id,
+            name: m.name,
+            version: m.version,
+            authors: m.authors,
+            description: m.description,
+        })
+        .collect();
+    mods.sort_by_key(|e| (e.source != ModSource::Yog, e.name.to_lowercase()));
+    mods
 }
