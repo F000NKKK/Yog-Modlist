@@ -4,35 +4,36 @@
         width="400"
         height="224"
         anchor="center"
-        bg="#E0101010"
+        bg="sprite:panel"
         x:ViewModel="ModListVm">
     <Screen.Resources>
-        <Color x:Key="Accent" value="#FFD700" />
-        <Color x:Key="Pane" value="#88111111" />
+        <Color x:Key="Title" value="#404040" />
         <Style x:Key="Filter"
                target="ToggleButton"
                w="58"
-               h="14"
-               bg="#FF333333"
+               h="16"
+               bg="sprite:button"
                color="#FFFFFF"
-               hover:bg="#FF444444"
-               checked:bg="#FF555555"
-               disabled:color="#FF777777" />
-        <Style x:Key="Detail" target="Label" w="100%" color="#CCCCCC" shadow="false" />
+               hover:bg="sprite:button_hover"
+               checked:bg="sprite:button_disabled"
+               checked:color="#FFFFFFA0"
+               disabled:bg="sprite:button_disabled"
+               disabled:color="#FFA0A0A0" />
+        <Style x:Key="Detail" target="Label" w="100%" color="#E0E0E0" />
     </Screen.Resources>
     <Grid w="100%" h="100%" rows="20,*,Auto">
-        <Row padding="0 8" gap="4" align="center" bg="#FF222222">
-            <Label text="@Strings.screen.title" color="@Accent" no_wrap="true" />
+        <Row padding="0 8" gap="4" align="center">
+            <Label text="@Strings.screen.title" color="@Title" shadow="false" no_wrap="true" />
             <Spacer flex="1" />
             <Label x:Name="mod_count"
                    text="{x:Bind count_text()}"
-                   color="#AAAAAA"
+                   color="@Title"
                    shadow="false"
                    no_wrap="true" />
         </Row>
         <Grid Grid.Row="1"
               padding="6 8 0 8"
-              rows="14,14,*"
+              rows="14,16,*"
               columns="*,*"
               row_spacing="4"
               column_spacing="6">
@@ -64,7 +65,7 @@
                       Grid.Row="2"
                       gap="2"
                       padding="2"
-                      bg="@Pane"
+                      bg="sprite:slot"
                       items="{x:Bind visible()}"
                       key="{x:Bind id}"
                       selected="{x:Bind selected_id(), BindBack=select}"
@@ -76,31 +77,29 @@
                                 h="22"
                                 padding="3 4"
                                 gap="1"
-                                bg="#44333333"
-                                hover:bg="#66333344"
-                                selected:bg="#883A3A5A">
+                                hover:bg="#40FFFFFF"
+                                selected:bg="#FF555555">
                             <Label w="100%"
                                    text="{x:Bind name}"
                                    color="#FFFFFF"
-                                   selected:color="#FFD700"
+                                   selected:color="#FFFFFFA0"
                                    ellipsis="true" />
                             <Label w="100%"
                                    text="{x:Bind subtitle()}"
-                                   color="#AAAAAA"
-                                   shadow="false"
+                                   color="#D0D0D0"
                                    ellipsis="true" />
                         </Column>
                     </DataTemplate>
                 </ListView.ItemTemplate>
                 <ListView.Empty>
-                    <Label text="{x:Bind empty_text()}" color="#888888" shadow="false" />
+                    <Label text="{x:Bind empty_text()}" color="#373737" shadow="false" />
                 </ListView.Empty>
             </ListView>
             <ScrollView x:Name="details"
                         Grid.Column="1"
                         Grid.RowSpan="3"
                         padding="4 6"
-                        bg="@Pane"
+                        bg="sprite:slot"
                         scroll_key="{x:Bind selected_id()}">
                 <ContentPresenter w="100%" content="{x:Bind selected()}">
                     <DataTemplate x:DataType="ModEntry">
@@ -122,14 +121,14 @@
         </Grid>
         <Button x:Name="done"
                 Grid.Row="2"
-                w="40"
-                h="14"
+                w="60"
+                h="20"
                 halign="right"
                 margin="4 8 6 8"
                 text="@Strings.screen.done"
-                bg="#FF333333"
+                bg="sprite:button"
                 color="#FFFFFF"
-                hover:bg="#FF555555"
+                hover:bg="sprite:button_hover"
                 command="{x:Bind cx.close()}" />
     </Grid>
 </Screen>
