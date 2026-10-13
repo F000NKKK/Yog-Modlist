@@ -1,35 +1,105 @@
-# Yog Mod List
+<div align="center">
 
-An in-game mod browser for [Yog Mod Loader](https://github.com/F000NKKK/Yog-Mod-Loader).
-Adds a "Yog Mods" button to the title/pause screen (Fabric) or next to the
-platform mod list (Forge/NeoForge) that opens a scrollable list of every
-installed mod — both `.yog` mods and, where the host exposes them, the
-platform's own Java mods.
+<a id="top"></a>
 
-Built entirely with Yog's own client-side API (`register_menu_entry`,
-`register_ui`/`on_ui_render`, `installed_mods`) — no Java code of its own, and
-no registration into the host loader's own mod list.
+# 📋 Yog Mod List
 
-## Features
+### An in-game mod browser for the Yog mod loader
 
-- Lists every loaded `.yog` mod (id, name, version, authors, description from
-  its `yog.toml`) plus platform mods on Fabric/Forge/NeoForge
-- Click a row to expand its full description
-- Mouse-wheel and draggable scrollbar for long lists
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.0-informational.svg)](yog.toml)
+[![yog-kit 0.3](https://img.shields.io/badge/yog--kit-0.3-orange.svg)](https://crates.io/crates/yog-kit)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1-62B47A.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
+[![Loaders](https://img.shields.io/badge/loaders-Fabric%20%7C%20NeoForge%20%7C%20Forge-8A2BE2.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
 
-## Requirements
+🇺🇸 **English** | 🇷🇺 [Русский](README.ru.md)
 
-Built against [Yog Mod Loader](https://github.com/F000NKKK/Yog-Mod-Loader)
-0.2.0+ (needs the `installed_mods` API, ABI minor 23+).
+[Overview](#-overview) • [Features](#-features) • [How It's Built](#-how-its-built) • [Building](#-building) • [License](#-license)
 
-## Building
+</div>
 
-```bash
-yog build
+---
+
+## 📖 Overview
+
+**Yog Mod List** adds a **Yog Mods** button to the game: on the title screen
+with Fabric, on the mod list screen with Forge and NeoForge. It opens a
+browser of every installed mod: `.yog` mods and, where the loader exposes
+them, the platform's own Java mods.
+
+It is a pure [Yog](https://github.com/F000NKKK/Yog-Mod-Loader) mod: Rust and
+`.yui` markup, no Java of its own. It is also the reference example of a
+view-model screen built with `yog-kit`.
+
+<!-- screenshot: docs/images/mod-list.png — the mod browser in game: search box, All/Yog/Platform filters, the list on the left with one mod selected, its details on the right -->
+
+## ✨ Features
+
+- 🔎 **Search** by name, id or description as you type
+- 🏷️ **Filters**: All, Yog, Platform (a filter with nothing to show is disabled)
+- 📜 **List** with Yog mods first, then by name; mouse wheel, scrollbar and keyboard
+- 📝 **Details pane**: name, version, source, authors, id and full description
+- 🌍 **English and Russian** UI that follows the game language
+
+## 🧩 How It's Built
+
+| File | What it is |
+|---|---|
+| [`src/lib.rs`](src/lib.rs) | Registers the screen and the menu button (`register_menu_entry`) |
+| [`src/mod_list.yui`](src/mod_list.yui) | The screen layout: a `Grid` with the header, search, filters, `ListView` and details pane |
+| [`src/mod_list.rs`](src/mod_list.rs) | `ModListVm`, the view model: loads `installed_mods()` on open, filtering, search, selection, plus a headless `TestHost` test |
+| [`src/pill.yui`](src/pill.yui), [`src/stat_bar.yui`](src/stat_bar.yui) + [`.rs`](src/stat_bar.rs) | Two reusable components: markup only, and markup with code-behind |
+| [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Texts in English and Russian; the mod name and description in `yog.toml` point here too (`@Strings.mod_name`) |
+
+Bindings in the markup call straight into the view model:
+
+```xml
+<TextBox text="{x:Bind search, Mode=TwoWay}" placeholder="@Strings.search.placeholder" />
+<ToggleButton text="@Strings.filter.yog"
+              checked="{x:Bind filter == Filter::Yog}"
+              enabled="{x:Bind has(Filter::Yog)}"
+              command="{x:Bind set_filter(Filter::Yog)}" />
+<ListView items="{x:Bind visible()}" selected="{x:Bind selected_id(), BindBack=select}" />
 ```
 
-Produces `artifacts/yog-modlist.yog` — drop it into `<game dir>/yog-mods/`.
+All files open in [Yog-IDLE](https://github.com/F000NKKK/Yog-IDLE): the
+screen and components in the designer, the `.yres` files in the resource
+table. The formats are described in Yog-IDLE's docs:
+[`.yui`](https://github.com/F000NKKK/Yog-IDLE/blob/master/docs/yui.md),
+[view models](https://github.com/F000NKKK/Yog-IDLE/blob/master/docs/mvvm.md),
+[`.yres`](https://github.com/F000NKKK/Yog-IDLE/blob/master/docs/yres.md).
 
-## License
+## 🔨 Building
 
-AGPL-3.0-only — see [LICENSE](LICENSE).
+You need the `yog` CLI (`cargo install yog-cli`).
+
+```bash
+yog build              # -> artifacts/yog-modlist.yog
+```
+
+Put the `.yog` into `<game dir>/yog-mods/` next to the Yog loader jar.
+
+To try it in a dev game, clone
+[Yog-Mod-Loader](https://github.com/F000NKKK/Yog-Mod-Loader) next to this
+repo and use one of the run configurations from `yog.toml`:
+
+```bash
+yog run fabric-1.21.1  # also fabric-1.20.1, neoforge-*, forge-*
+```
+
+The view-model test runs without the game: `cargo test` in `.yog-build/`
+after a build.
+
+## 📄 License
+
+**AGPL-3.0-only**, see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#top)**
+
+Part of the [Yog](https://github.com/F000NKKK/Yog-Mod-Loader) project
+
+</div>
