@@ -59,7 +59,7 @@
                             color="#FFFFFF"
                             on_click="filter_yog" />
                     <Button id="filter_platform"
-                            w="58"
+                            w="64"
                             h="14"
                             text="@Strings.filter.platform"
                             bg="#FF333333"
@@ -71,7 +71,8 @@
                             flex="1"
                             gap="2"
                             padding="2"
-                            bg="#88111111" />
+                            bg="#88111111">
+                </ScrollView>
             </Column>
             <ScrollView id="details"
                         flex="1"
