@@ -5,7 +5,11 @@
 yog_api::ui_include!("mod_list");
 
 use crate::res::{Colors, Strings};
+use yog_api::ModInfo;
 use yog_kit::prelude::*;
+
+/// `ModInfo::source` of a .yog mod (anything else is a platform mod).
+const YOG_SOURCE: &str = "yog";
 
 #[derive(Debug, Clone)]
 pub struct ModEntry {
@@ -15,6 +19,9 @@ pub struct ModEntry {
     pub authors: String,
     pub description: String,
     pub source: ModSource,
+    /// Lowercase name, id and description, `\0`-separated: what the search
+    /// matches against, so a search doesn't lowercase every mod per update.
+    search_key: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,6 +51,27 @@ impl ModSource {
     }
 }
 
+impl From<ModInfo> for ModEntry {
+    fn from(m: ModInfo) -> Self {
+        let search_key = [&m.name, &m.id, &m.description]
+            .map(|s| s.to_lowercase())
+            .join("\0");
+        Self {
+            source: if m.source == YOG_SOURCE {
+                ModSource::Yog
+            } else {
+                ModSource::Platform
+            },
+            id: m.id,
+            name: m.name,
+            version: m.version,
+            authors: m.authors,
+            description: m.description,
+            search_key,
+        }
+    }
+}
+
 impl ModEntry {
     pub fn subtitle(&self) -> String {
         format!(
@@ -68,10 +96,7 @@ impl ModEntry {
     }
     /// Name, id or description contains `query` (already lowercase).
     fn matches(&self, query: &str) -> bool {
-        query.is_empty()
-            || [&self.name, &self.id, &self.description]
-                .iter()
-                .any(|s| s.to_lowercase().contains(query))
+        self.search_key.contains(query)
     }
 }
 
@@ -169,20 +194,9 @@ impl ModListVm {
 fn load_mods() -> Vec<ModEntry> {
     let mut mods: Vec<ModEntry> = yog_api::installed_mods()
         .into_iter()
-        .map(|m| ModEntry {
-            source: if m.source == "yog" {
-                ModSource::Yog
-            } else {
-                ModSource::Platform
-            },
-            id: m.id,
-            name: m.name,
-            version: m.version,
-            authors: m.authors,
-            description: m.description,
-        })
+        .map(ModEntry::from)
         .collect();
-    mods.sort_by_key(|e| (e.source != ModSource::Yog, e.name.to_lowercase()));
+    mods.sort_by_cached_key(|e| (e.source != ModSource::Yog, e.name.to_lowercase()));
     mods
 }
 
@@ -191,22 +205,23 @@ mod tests {
     use super::*;
     use yog_kit::testing::TestHost;
 
-    fn entry(id: &str, source: ModSource) -> ModEntry {
-        ModEntry {
+    fn entry(id: &str, source: &str) -> ModEntry {
+        ModInfo {
+            source: source.into(),
             id: id.into(),
             name: id.to_uppercase(),
             version: "1.0".into(),
             authors: String::new(),
             description: format!("the {id} mod"),
-            source,
         }
+        .into()
     }
 
     fn host() -> TestHost<View> {
         let mods = vec![
-            entry("alpha", ModSource::Yog),
-            entry("beta", ModSource::Yog),
-            entry("fabric-api", ModSource::Platform),
+            entry("alpha", YOG_SOURCE),
+            entry("beta", YOG_SOURCE),
+            entry("fabric-api", "platform"),
         ];
         let mut h = TestHost::<View>::new(ModListVm {
             mods,
@@ -238,5 +253,14 @@ mod tests {
         assert_eq!(h.vm().search, "zzz");
         assert!(!h.vm().has(Filter::Yog));
         assert!(h.widget(ids::DETAIL_NAME).is_none());
+    }
+
+    #[test]
+    fn search_ignores_case() {
+        let mut h = host();
+        h.type_into(ids::SEARCH, "FaBrIc");
+        assert!(h.vm().has(Filter::Platform));
+        assert!(!h.vm().has(Filter::Yog));
+        assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("FABRIC-API"));
     }
 }
