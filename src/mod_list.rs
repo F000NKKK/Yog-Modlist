@@ -12,6 +12,7 @@ yog_api::ui_include!("mod_list");
 
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
+use crate::res::Strings;
 use yog_api::ui::{widget, FlexDir, ScrollState, TextBoxEvent, TextBoxState, Units, Widget};
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -143,18 +144,18 @@ const ROW_SELECTED_BG: u32 = 0x88_3A3A5A;
 const FILTER_BG: u32 = 0xFF_333333;
 const FILTER_ACTIVE_BG: u32 = 0xFF_555555;
 
-fn source_label(source: ModSource) -> &'static str {
+fn source_label(source: ModSource) -> String {
     match source {
-        ModSource::Yog => "Yog mod",
-        ModSource::Platform => "Platform mod",
+        ModSource::Yog => Strings::source_yog(),
+        ModSource::Platform => Strings::source_platform(),
     }
 }
 
 /// One list row: name, then version and source.
 fn row(index: usize, e: &ModEntry, selected: bool) -> Widget {
     let badge = match e.source {
-        ModSource::Yog => "[Yog]",
-        ModSource::Platform => "[MC]",
+        ModSource::Yog => Strings::badge_yog(),
+        ModSource::Platform => Strings::badge_platform(),
     };
     widget::panel(FlexDir::Column)
         .w(Units::Percent(100.0))
@@ -169,7 +170,7 @@ fn row(index: usize, e: &ModEntry, selected: bool) -> Widget {
                 .ellipsis(),
         )
         .child(
-            widget::label(format!("v{}  {badge}", e.version))
+            widget::label(format!("{}  {badge}", Strings::row_version(&e.version)))
                 .w(Units::Percent(100.0))
                 .color(0xAA_AAAAAA)
                 .shadow(false)
@@ -196,9 +197,9 @@ fn populate(root: &mut Widget) {
     let total = mod_entries().len();
     let shown = visible(&st).count();
     let count = if shown == total {
-        format!("{total} mods")
+        Strings::screen_count(total)
     } else {
-        format!("{shown} of {total} mods")
+        Strings::screen_count_filtered(shown, total)
     };
     set(root, ids::MOD_COUNT, &count, None);
 
@@ -228,9 +229,9 @@ fn populate(root: &mut Widget) {
             .collect();
         if list.children.is_empty() {
             let empty = if st.search.text().trim().is_empty() {
-                "No mods"
+                Strings::list_empty()
             } else {
-                "No mods match the search"
+                Strings::list_no_matches()
             };
             list.children
                 .push(widget::label(empty).color(0xFF_888888).shadow(false));
@@ -246,7 +247,7 @@ fn populate(root: &mut Widget) {
             set(
                 root,
                 ids::DETAIL_VERSION,
-                &format!("Version {}", e.version),
+                &Strings::details_version(&e.version),
                 None,
             );
             let source_color = match e.source {
@@ -256,25 +257,25 @@ fn populate(root: &mut Widget) {
             set(
                 root,
                 ids::DETAIL_SOURCE,
-                source_label(e.source),
+                &source_label(e.source),
                 Some(source_color),
             );
             let by = if e.authors.is_empty() {
-                "by unknown".to_string()
+                Strings::details_authors_unknown()
             } else {
-                format!("by {}", e.authors)
+                Strings::details_authors(&e.authors)
             };
             set(root, ids::DETAIL_AUTHORS, &by, None);
-            set(root, ids::DETAIL_ID, &format!("id: {}", e.id), None);
+            set(root, ids::DETAIL_ID, &Strings::details_id(&e.id), None);
             let desc = if e.description.is_empty() {
-                "No description."
+                Strings::details_no_description()
             } else {
-                e.description.as_str()
+                e.description.clone()
             };
-            set(root, ids::DETAIL_DESCRIPTION, desc, None);
+            set(root, ids::DETAIL_DESCRIPTION, &desc, None);
         }
         None => {
-            set(root, ids::DETAIL_NAME, "No mod selected", None);
+            set(root, ids::DETAIL_NAME, &Strings::details_none_selected(), None);
             for id in [
                 ids::DETAIL_VERSION,
                 ids::DETAIL_SOURCE,
