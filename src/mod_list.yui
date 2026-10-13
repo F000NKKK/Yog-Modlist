@@ -29,14 +29,6 @@
                    color="#AAAAAA"
                    shadow="false"
                    no_wrap="true" />
-            <Button x:Name="done"
-                    w="40"
-                    h="14"
-                    text="@Strings.screen.done"
-                    bg="#FF333333"
-                    color="#FFFFFF"
-                    hover:bg="#FF555555"
-                    command="{x:Bind cx.close()}" />
         </Row>
         <Row flex="1" w="100%" padding="6 8 8 8" gap="6">
             <Column w="50%" h="100%" gap="4">
@@ -127,6 +119,14 @@
                     </ContentPresenter.Empty>
                 </ContentPresenter>
             </ScrollView>
+            <Button x:Name="done"
+                    w="40"
+                    h="14"
+                    text="@Strings.screen.done"
+                    bg="#FF333333"
+                    color="#FFFFFF"
+                    hover:bg="#FF555555"
+                    command="{x:Bind cx.close()}" />
         </Row>
     </Column>
 </Screen>
