@@ -471,15 +471,15 @@ dependencies = [
 
 [[package]]
 name = "yog-abi"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38cf9237f3cd633bfa9a47b32ce16050f2e645fee16beff555da3ad6b035ec3d"
+checksum = "25c7825105d390e604067b97b2814466b20491defb53877e6b3e1dcbfa8a028f"
 
 [[package]]
 name = "yog-api"
-version = "0.92.1"
+version = "0.92.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fc66ce324e2d35cee8ba88f3987410ca113ee0d2379c57c3f5758fb5ecaf67c"
+checksum = "568d88e950660a33304100c4e4e4a31ba28e294472cd0ab23e23a07d0d557dd0"
 dependencies = [
  "ctor",
  "rkyv",
@@ -531,9 +531,9 @@ checksum = "d712d79a3e046f0482232c1dc59400e23f85f60935758b7bbcf2a02ed288e981"
 
 [[package]]
 name = "yog-core"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b646311e42a25a64b36bdeb551cf3bfe2ffff0bab7e4173011ccbc343801d92"
+checksum = "1a9ad603db1523d7f96ddcbe0875d8b82d5edee75847672190a93d5ade04d806"
 
 [[package]]
 name = "yog-dimensions"
