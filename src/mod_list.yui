@@ -2,7 +2,7 @@
 <!-- The mod browser. Code-behind: mod_list.rs (rows of the list are added there at runtime). -->
 <Screen id="yog-modlist:mod_list"
         width="400"
-        height="224"
+        height="252"
         anchor="center"
         bg="#E0101010">
     <!-- Screen children are placed at x/y; this one fills it and stacks the rest. -->
@@ -29,11 +29,17 @@
         <!-- Below the header: the list on the left half, details filling the rest. -->
         <Row flex="1"
              w="100%"
-             padding="6 8 8 8"
+             padding="6 8 4 8"
              gap="6">
             <Column w="50%"
                     h="100%"
                     gap="4">
+                <TextBox id="search"
+                         w="100%"
+                         h="16"
+                         placeholder="Search mods..."
+                         max_length="64"
+                         on_change="search" />
                 <Row id="filters"
                      w="100%"
                      h="14"
@@ -96,6 +102,20 @@
                        color="#DDDDDD"
                        shadow="false" />
             </ScrollView>
+        </Row>
+        <Row id="footer"
+             w="100%"
+             h="26"
+             padding="0 8 6 8"
+             align="center">
+            <Spacer flex="1" />
+            <Button id="done"
+                    w="80"
+                    h="18"
+                    text="Done"
+                    bg="#FF555555"
+                    color="#FFFFFF"
+                    on_click="done" />
         </Row>
     </Column>
 </Screen>
