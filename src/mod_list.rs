@@ -174,3 +174,53 @@ fn load_mods() -> Vec<ModEntry> {
     mods.sort_by_key(|e| (e.source != ModSource::Yog, e.name.to_lowercase()));
     mods
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use yog_kit::testing::TestHost;
+
+    fn entry(id: &str, source: ModSource) -> ModEntry {
+        ModEntry {
+            id: id.into(),
+            name: id.to_uppercase(),
+            version: "1.0".into(),
+            authors: String::new(),
+            description: format!("the {id} mod"),
+            source,
+        }
+    }
+
+    fn host() -> TestHost<View> {
+        let mods = vec![
+            entry("alpha", ModSource::Yog),
+            entry("beta", ModSource::Yog),
+            entry("fabric-api", ModSource::Platform),
+        ];
+        let mut h = TestHost::<View>::new(ModListVm { mods, ..Default::default() });
+        h.size(427.0, 240.0).open();
+        h
+    }
+
+    #[test]
+    fn filters_search_and_selection() {
+        let mut h = host();
+        assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("ALPHA"));
+        h.click_id(ids::FILTER_PLATFORM);
+        assert_eq!(h.vm().filter, Filter::Platform);
+        assert!(h.state(ids::FILTER_PLATFORM).contains(yog_api::ui::StateFlags::CHECKED));
+        assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("FABRIC-API"));
+
+        h.click_id(ids::FILTER_ALL);
+        h.key(yog_api::ui::event::keys::DOWN); // list not focused yet: no-op
+        let mut row = h.path(ids::MOD_LIST);
+        row.push(2); // [top spacer, alpha, beta, ...]
+        h.click_path(&row);
+        assert_eq!(h.vm().selected.as_deref(), Some("beta"));
+
+        h.type_into(ids::SEARCH, "zzz");
+        assert_eq!(h.vm().search, "zzz");
+        assert!(!h.vm().has(Filter::Yog));
+        assert!(h.widget(ids::DETAIL_NAME).is_none());
+    }
+}
