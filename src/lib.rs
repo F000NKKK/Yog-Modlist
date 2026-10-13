@@ -5,6 +5,7 @@
 //! layout, edited in Yog-IDLE's screen designer) plus its code-behind
 //! `mod_list.rs`.
 
+mod components;
 mod mod_list;
 
 // `crate::res` — typed accessors for resources/*.yres (Strings::...).
