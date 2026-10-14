@@ -4,31 +4,18 @@
         width="400"
         height="224"
         anchor="center"
-        bg="sprite:panel"
+        theme="minecraft:vanilla"
         x:ViewModel="ModListVm">
     <Screen.Resources>
-        <Color x:Key="Title" value="#404040" />
-        <Style x:Key="Filter"
-               target="ToggleButton"
-               w="58"
-               h="16"
-               bg="sprite:button"
-               color="#FFFFFF"
-               hover:bg="sprite:button_hover"
-               checked:bg="sprite:button_disabled"
-               checked:color="#FFFFFFA0"
-               disabled:bg="sprite:button_disabled"
-               disabled:color="#FFA0A0A0" />
+        <Style x:Key="Filter" target="ToggleButton" w="58" h="16" />
         <Style x:Key="Detail" target="Label" w="100%" color="#E0E0E0" />
     </Screen.Resources>
     <Grid w="100%" h="100%" rows="20,*,Auto">
         <Row padding="0 8" gap="4" align="center">
-            <Label text="@Strings.screen.title" color="@Title" shadow="false" no_wrap="true" />
+            <Label text="@Strings.screen.title" no_wrap="true" />
             <Spacer flex="1" />
             <Label x:Name="mod_count"
                    text="{x:Bind count_text()}"
-                   color="@Title"
-                   shadow="false"
                    no_wrap="true" />
         </Row>
         <Grid Grid.Row="1"
@@ -65,7 +52,6 @@
                       Grid.Row="2"
                       gap="2"
                       padding="2"
-                      bg="sprite:slot"
                       items="{x:Bind visible()}"
                       key="{x:Bind id}"
                       selected="{x:Bind selected_id(), BindBack=select}"
@@ -99,8 +85,7 @@
                         Grid.Column="1"
                         Grid.RowSpan="3"
                         padding="4 6"
-                        bg="sprite:slot"
-                        scroll_key="{x:Bind selected_id()}">
+                          scroll_key="{x:Bind selected_id()}">
                 <ContentPresenter w="100%" content="{x:Bind selected()}">
                     <DataTemplate x:DataType="ModEntry">
                         <Column w="100%" gap="3">
@@ -126,9 +111,6 @@
                 halign="right"
                 margin="4 8 6 8"
                 text="@Strings.screen.done"
-                bg="sprite:button"
-                color="#FFFFFF"
-                hover:bg="sprite:button_hover"
                 command="{x:Bind cx.close()}" />
     </Grid>
 </Screen>
