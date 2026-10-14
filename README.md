@@ -8,7 +8,7 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.2.0-informational.svg)](yog.toml)
-[![yog-kit 0.3](https://img.shields.io/badge/yog--kit-0.3-orange.svg)](https://crates.io/crates/yog-kit)
+[![yog-kit 0.4](https://img.shields.io/badge/yog--kit-0.4-orange.svg)](https://crates.io/crates/yog-kit)
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1-62B47A.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
 [![Loaders](https://img.shields.io/badge/loaders-Fabric%20%7C%20NeoForge%20%7C%20Forge-8A2BE2.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
 
@@ -31,7 +31,7 @@ It is a pure [Yog](https://github.com/F000NKKK/Yog-Mod-Loader) mod: Rust and
 `.yui` markup, no Java of its own. It is also the reference example of a
 view-model screen built with `yog-kit`.
 
-<!-- screenshot: docs/images/mod-list.png — the mod browser in game: search box, All/Yog/Platform filters, the list on the left with one mod selected, its details on the right -->
+<p align="center"><img src="docs/images/mod-list.png" alt="The mod browser as Yog-IDLE's screen designer draws it: search box, All/Yog/Platform filters, the list and the details pane" width="760"></p>
 
 ## ✨ Features
 
