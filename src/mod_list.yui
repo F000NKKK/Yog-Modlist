@@ -8,7 +8,7 @@
         x:ViewModel="ModListVm">
     <Screen.Resources>
         <Style x:Key="Filter" target="ToggleButton" w="58" h="16" />
-        <Style x:Key="Detail" target="Label" w="100%" color="#E0E0E0" />
+        <Style x:Key="Detail" target="Label" w="100%" color="@Colors.detail" />
     </Screen.Resources>
     <Grid w="100%" h="100%" rows="20,*,Auto">
         <Row padding="0 8" gap="4" align="center">
@@ -63,22 +63,22 @@
                                 h="22"
                                 padding="3 4"
                                 gap="1"
-                                hover:bg="#40FFFFFF"
-                                selected:bg="#FF555555">
+                                hover:bg="@Colors.row.hover"
+                                selected:bg="@Colors.row.selected">
                             <Label w="100%"
                                    text="{x:Bind name}"
-                                   color="#FFFFFF"
-                                   selected:color="#FFFFFFA0"
+                                   color="@Colors.row.name"
+                                   selected:color="@Colors.row.name_selected"
                                    ellipsis="true" />
                             <Label w="100%"
                                    text="{x:Bind subtitle()}"
-                                   color="#D0D0D0"
+                                   color="@Colors.row.subtitle"
                                    ellipsis="true" />
                         </Column>
                     </DataTemplate>
                 </ListView.ItemTemplate>
                 <ListView.Empty>
-                    <Label text="{x:Bind empty_text()}" color="#373737" shadow="false" />
+                    <Label text="{x:Bind empty_text()}" color="@Colors.empty" shadow="false" />
                 </ListView.Empty>
             </ListView>
             <ScrollView x:Name="details"
@@ -89,17 +89,17 @@
                 <ContentPresenter w="100%" content="{x:Bind selected()}">
                     <DataTemplate x:DataType="ModEntry">
                         <Column w="100%" gap="3">
-                            <Label x:Name="detail_name" w="100%" text="{x:Bind name}" color="#FFFFFF" />
-                            <Label style="@Detail" text="{x:Bind Strings::details_version(version)}" color="#AAAAAA" />
+                            <Label x:Name="detail_name" w="100%" text="{x:Bind name}" color="@Colors.detail.name" />
+                            <Label style="@Detail" text="{x:Bind Strings::details_version(version)}" color="@Colors.detail.version" />
                             <Label style="@Detail" text="{x:Bind source.label()}" color="{x:Bind source.color()}" />
                             <Label style="@Detail" text="{x:Bind authors_text()}" />
-                            <Label style="@Detail" text="{x:Bind Strings::details_id(id)}" color="#9999BB" />
+                            <Label style="@Detail" text="{x:Bind Strings::details_id(id)}" color="@Colors.detail.id" />
                             <Spacer h="4" />
-                            <Label style="@Detail" text="{x:Bind description_text()}" color="#DDDDDD" />
+                            <Label style="@Detail" text="{x:Bind description_text()}" color="@Colors.detail.description" />
                         </Column>
                     </DataTemplate>
                     <ContentPresenter.Empty>
-                        <Label text="@Strings.details.none_selected" color="#FFFFFF" />
+                        <Label text="@Strings.details.none_selected" color="@Colors.detail.none" />
                     </ContentPresenter.Empty>
                 </ContentPresenter>
             </ScrollView>
