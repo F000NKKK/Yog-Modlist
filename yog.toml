@@ -7,8 +7,8 @@ authors     = ["F000NK", "Yog Team"]
 license     = "AGPL-3.0-only"
 
 [dependencies]
-yog-api = "0.98"
-yog-kit = "0.9"
+yog-api = "0.100.0"
+yog-kit = "0.11.0"
 
 ## `yog run <name>` — build, drop the .yog into the loader's own Gradle dev-run
 # instance, then launch it.
