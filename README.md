@@ -84,7 +84,7 @@ To try it in a dev game, clone
 repo and use one of the run configurations from `yog.toml`:
 
 ```bash
-yog run fabric-1.21.1  # also fabric-1.20.1, neoforge-*, forge-*
+yog run fabric 1.21.1  # every loader and version: yog run --list
 ```
 
 The view-model test runs without the game: `cargo test` in `.yog-build/`

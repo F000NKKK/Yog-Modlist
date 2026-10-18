@@ -84,7 +84,7 @@ yog build              # -> artifacts/yog-modlist.yog
 репозиторием и выберите конфигурацию запуска из `yog.toml`:
 
 ```bash
-yog run fabric-1.21.1  # а также fabric-1.20.1, neoforge-*, forge-*
+yog run fabric 1.21.1  # все загрузчики и версии: yog run --list
 ```
 
 Тест модели представления работает без игры: после сборки выполните
