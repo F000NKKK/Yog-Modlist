@@ -11,7 +11,7 @@ mod mod_list;
 yog_api::resources!();
 
 use res::Strings;
-use yog_api::{info, Mod, Registry};
+use yog_api::{Mod, Registry, info};
 
 pub struct YogModList;
 

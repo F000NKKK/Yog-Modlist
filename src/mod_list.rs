@@ -237,9 +237,10 @@ mod tests {
         assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("ALPHA"));
         h.click_id(ids::FILTER_PLATFORM);
         assert_eq!(h.vm().filter, Filter::Platform);
-        assert!(h
-            .state(ids::FILTER_PLATFORM)
-            .contains(yog_api::ui::StateFlags::CHECKED));
+        assert!(
+            h.state(ids::FILTER_PLATFORM)
+                .contains(yog_api::ui::StateFlags::CHECKED)
+        );
         assert_eq!(h.text(ids::DETAIL_NAME).as_deref(), Some("FABRIC-API"));
 
         h.click_id(ids::FILTER_ALL);
@@ -257,9 +258,14 @@ mod tests {
 
     #[test]
     fn each_filter_starts_at_the_top() {
-        let mut mods: Vec<ModEntry> = (0..40).map(|i| entry(&format!("yog{i:02}"), YOG_SOURCE)).collect();
+        let mut mods: Vec<ModEntry> = (0..40)
+            .map(|i| entry(&format!("yog{i:02}"), YOG_SOURCE))
+            .collect();
         mods.extend((0..40).map(|i| entry(&format!("java{i:02}"), "platform")));
-        let mut h = TestHost::<View>::new(ModListVm { mods, ..Default::default() });
+        let mut h = TestHost::<View>::new(ModListVm {
+            mods,
+            ..Default::default()
+        });
         h.size(427.0, 240.0).open();
         let list = h.rect(ids::MOD_LIST).unwrap();
         // The name on the first row the list shows (after its top spacer).
@@ -272,8 +278,16 @@ mod tests {
         h.scroll(-20.0);
         assert!(h.scroll_offset(0) > 0.0, "the list scrolled");
         h.click_id(ids::FILTER_PLATFORM);
-        assert_eq!(h.scroll_offset(0), 0.0, "another filter shows its list from the top");
-        assert_eq!(first_row(&h).as_deref(), Some("JAVA00"), "with its first rows, at once");
+        assert_eq!(
+            h.scroll_offset(0),
+            0.0,
+            "another filter shows its list from the top"
+        );
+        assert_eq!(
+            first_row(&h).as_deref(),
+            Some("JAVA00"),
+            "with its first rows, at once"
+        );
         h.move_to(list.x + 10.0, list.y + 10.0);
         h.scroll(-20.0);
         h.click_id(ids::FILTER_ALL);
