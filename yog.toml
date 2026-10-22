@@ -7,5 +7,5 @@ authors     = ["F000NK", "Yog Team"]
 license     = "AGPL-3.0-only"
 
 [dependencies]
-yog-api = "0.102.0"
+yog-api = "0.102.4"
 yog-kit = "0.13.0"
