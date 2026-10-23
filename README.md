@@ -74,7 +74,7 @@ table. The formats are described in Yog-IDLE's docs:
 You need the `yog` CLI (`cargo install yog-cli`).
 
 ```bash
-yog build              # -> artifacts/yog-modlist.yog
+yog build              # -> bin/yog-modlist.yog
 ```
 
 Put the `.yog` into `<game dir>/yog-mods/` next to the Yog loader jar.
@@ -87,7 +87,7 @@ repo and use one of the run configurations from `yog.toml`:
 yog run fabric 1.21.1  # every loader and version: yog run --list
 ```
 
-The view-model test runs without the game: `cargo test` in `.yog-build/`
+The view-model test runs without the game: `cargo test` in `obj/`
 after a build.
 
 ## 📄 License

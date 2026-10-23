@@ -74,7 +74,7 @@ Java-модов платформы.
 Нужен CLI `yog` (`cargo install yog-cli`).
 
 ```bash
-yog build              # -> artifacts/yog-modlist.yog
+yog build              # -> bin/yog-modlist.yog
 ```
 
 Положите `.yog` в `<папка игры>/yog-mods/` рядом с jar загрузчика Yog.
@@ -88,7 +88,7 @@ yog run fabric 1.21.1  # все загрузчики и версии: yog run --
 ```
 
 Тест модели представления работает без игры: после сборки выполните
-`cargo test` в `.yog-build/`.
+`cargo test` в `obj/`.
 
 ## 📄 Лицензия
 
