@@ -8,8 +8,8 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.2.0-informational.svg)](yog.toml)
-[![yog-kit 0.4](https://img.shields.io/badge/yog--kit-0.4-orange.svg)](https://crates.io/crates/yog-kit)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1-62B47A.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
+[![yog-kit 0.15](https://img.shields.io/badge/yog--kit-0.15-orange.svg)](https://crates.io/crates/yog-kit)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.1%20%7C%2026.2-62B47A.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
 [![Loaders](https://img.shields.io/badge/loaders-Fabric%20%7C%20NeoForge%20%7C%20Forge-8A2BE2.svg)](https://github.com/F000NKKK/Yog-Mod-Loader)
 
 🇺🇸 [English](README.md) | 🇷🇺 **Русский**
@@ -81,7 +81,8 @@ yog build              # -> bin/yog-modlist.yog
 
 Чтобы запустить в dev-окружении, склонируйте
 [Yog-Mod-Loader](https://github.com/F000NKKK/Yog-Mod-Loader) рядом с этим
-репозиторием и выберите конфигурацию запуска из `yog.toml`:
+репозиторием и запустите на одной из целей загрузчика (они берутся из SDK
+загрузчика и `~/.yog/local.toml`, а не из мода):
 
 ```bash
 yog run fabric 1.21.1  # все загрузчики и версии: yog run --list
