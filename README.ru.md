@@ -48,14 +48,14 @@ Java-модов платформы.
 | [`src/lib.rs`](src/lib.rs) | Регистрирует экран и кнопку в меню (`register_menu_entry`) |
 | [`src/mod_list.yui`](src/mod_list.yui) | Разметка экрана: `Grid` с заголовком, поиском, фильтрами, `ListView` и панелью подробностей |
 | [`src/mod_list.rs`](src/mod_list.rs) | `ModListVm`, модель представления: при открытии загружает `installed_mods()`, фильтрует, ищет, хранит выбор; там же тест на `TestHost` без игры |
-| [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Тексты на английском и русском; название и описание мода в `yog.toml` тоже берутся отсюда (`@Strings.mod_name`) |
+| [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Тексты на английском и русском; название и описание мода в `yog.toml` тоже берутся отсюда (`@res:Strings.mod_name`) |
 | [`resources/Colors.yres`](resources/Colors.yres) | Цвета источника в панели подробностей (`Colors::SOURCE_YOG`, `Colors::SOURCE_PLATFORM`) |
 
 Привязки в разметке напрямую вызывают модель представления:
 
 ```xml
-<TextBox text="{x:Bind search, Mode=TwoWay}" placeholder="@Strings.search.placeholder" />
-<ToggleButton text="@Strings.filter.yog"
+<TextBox text="{x:Bind search, Mode=TwoWay}" placeholder="@res:Strings.search.placeholder" />
+<ToggleButton text="@res:Strings.filter.yog"
               checked="{x:Bind filter == Filter::Yog}"
               enabled="{x:Bind has(Filter::Yog)}"
               command="{x:Bind set_filter(Filter::Yog)}" />

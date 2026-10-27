@@ -48,14 +48,14 @@ view-model screen built with `yog-kit`.
 | [`src/lib.rs`](src/lib.rs) | Registers the screen and the menu button (`register_menu_entry`) |
 | [`src/mod_list.yui`](src/mod_list.yui) | The screen layout: a `Grid` with the header, search, filters, `ListView` and details pane |
 | [`src/mod_list.rs`](src/mod_list.rs) | `ModListVm`, the view model: loads `installed_mods()` on open, filtering, search, selection, plus a headless `TestHost` test |
-| [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Texts in English and Russian; the mod name and description in `yog.toml` point here too (`@Strings.mod_name`) |
+| [`resources/Strings.yres`](resources/Strings.yres), [`Strings.ru_ru.yres`](resources/Strings.ru_ru.yres) | Texts in English and Russian; the mod name and description in `yog.toml` point here too (`@res:Strings.mod_name`) |
 | [`resources/Colors.yres`](resources/Colors.yres) | The source colors of the details pane (`Colors::SOURCE_YOG`, `Colors::SOURCE_PLATFORM`) |
 
 Bindings in the markup call straight into the view model:
 
 ```xml
-<TextBox text="{x:Bind search, Mode=TwoWay}" placeholder="@Strings.search.placeholder" />
-<ToggleButton text="@Strings.filter.yog"
+<TextBox text="{x:Bind search, Mode=TwoWay}" placeholder="@res:Strings.search.placeholder" />
+<ToggleButton text="@res:Strings.filter.yog"
               checked="{x:Bind filter == Filter::Yog}"
               enabled="{x:Bind has(Filter::Yog)}"
               command="{x:Bind set_filter(Filter::Yog)}" />
