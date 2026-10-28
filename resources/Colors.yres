@@ -1,14 +1,1 @@
-SDATsource.yog	typecolorvalue#1E6E1EcommentODetails pane: source line of a .yog modsource.platform#1E4A8A
-eDetails pane: source line of a platform (Java) moddetail#303030
-7Details pane: a detail linerow.hover#30FFFFFF
-AMod list: a row under the cursorrow.selected#FFC6C6C6
-5Mod list: the selected rowrow.name#202020
--Mod list: a mod's name#row.name_selected#000000
-CMod list: the selected mod's namerow.subtitle#404040
-SMod list: version and source under a nameempty#373737
-;Mod list: the empty-list textdetail.name(
-9Details pane: the mod's namedetail.version4
-=Details pane: the version linedetail.id#3A3A6A
-3Details pane: the id line%detail.description#2A2A2A
-;Details pane: the descriptiondetail.none
-=Details pane: nothing selected
+SDATsource.yogsource.platformdetailrow.hoverrow.selectedrow.name#row.name_selectedrow.subtitleemptydetail.namedetail.versiondetail.id%detail.descriptiondetail.none	typevaluecommentcolor#1E6E1EODetails pane: source line of a .yog mod1#1E4A8AeDetails pane: source line of a platform (Java) mod1#3030307Details pane: a detail line1#30FFFFFFAMod list: a row under the cursor1#FFC6C6C65Mod list: the selected row1#202020-Mod list: a mod's name1#000000CMod list: the selected mod's name1#404040SMod list: version and source under a name1#373737;Mod list: the empty-list text1<9Details pane: the mod's name1@=Details pane: the version line1#3A3A6A3Details pane: the id line1#2A2A2A;Details pane: the description16=Details pane: nothing selected
